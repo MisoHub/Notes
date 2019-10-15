@@ -1,0 +1,16 @@
+
+> https://stackoverflow.com/questions/10603045/viewing-n-and-r-characters-in-vim
+
+Notepad++ 에서 인코딩 변경
+ - Edit 
+ > EOL Conversion 
+ > Unix Conversion and save
+ 
+vi(m) 에서 파일 포맷 변경
+ - ':' 입력 
+ - setl fileformat? 파일 포맷 확인 
+ - dos 인 경우, unix 로 변경 
+  setl fileformat=unix 
+ - 저장 
+ 
+
