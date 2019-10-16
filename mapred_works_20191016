@@ -1,0 +1,30 @@
+https://0x0fff.com/wp-content/uploads/2014/12/MapReduce-v3.png
+
+** Mapred 처리 파이프라인 
+* 맵 단계 
+- HDFS에서 데이터를 읽어 InputSplit을 생성한다. 일반적으로 HDFS block size와 InputSplit의 크기는 같다. (MR 프로그램에서 변경할 수 있다)  // dfs.blocksize (128MB)
+- InputSplit 별로 하나의 맵 태스크가 실행이된다. 
+- 맵 태스크는 InputSplit의 키값에 대해서 해쉬 함수를 이용해 파티션을 나누고 일정 개수의 파티션으로 이루어진 링 메모리 버퍼를 생성(io.sort.mb)한다.  //  ( io.sort.mb=100MB < 2048 MB) 
+
+* 정렬 단계
+- 읽어들인 값을 해쉬 값에 따라서 만약 버퍼가 임계값(io.sort.spill.percent)을 넘는다면 disk에 Spill 시킨다.  // 0.0 < io.sort.spill.percent=0.8 < 1.0 
+	. 만약 하나의 레코드가 너무 크다면 그 레코드만 별도로 spill 파일로 저장한다. 
+	. 마지막 spill 작업은 버퍼의 모든 값들을 spill 파일로 저장한다. 
+- 버퍼는 파티션 단위로 spill 되는데, 해당 파티션에도 여러개의 키 값이 존재할 수 있음으로 정렬 작업을 통해 키 별로 spill 파일을 파티셔닝 한다. 
+- 파티션 된 각 spill 파일들은 다시 메모리 상에서 Index Spill File 을 생성하여 같은 키값에 대해서 병렬작업을 수행하고, 
+그렇게 정렬된 spill 파일들을 일정 개수(io.sort.factor(10))로 다시 병합하여 저장한다(mapred) 
+
+* 셔플 단계 
+- (맵 단계가 끝나고 병합파일이 생성되면 리듀서는 각 맵 태스크에 생성된 병합파일의 파티션을 확인하여 자신에게 필요한 데이터를 복사한다(mapred.reduce.parallel.copies=5) 
+- 복사한 데이터들은 리듀서에 할당된 메모리(mpareduce.reduce.memory.total.bytes=1024MB)의 일정한 크기의 공간(mapreduce.reduce.shuffle.input.buffer.percent=0.7)에 저장한다. 
+
+* 병합 단계 
+- 각 맵에서 읽은 데이터들은 메모리에서 병합작업을 수행하고 메모리가 조건 이상 사용되면 파일로 저장한다. 
+	. 버퍼에 저장된 내용은 일정한 크기 이상 도달(mapred.job.shuffle.merge.percent=0.7) 
+	. 저장된 파일 개수가 지나는 경우(mapred.inmem.merge.threshold=1000) 파일로 저장한다. 
+- 병합된 파일들은 일정 개수 단위로(io.sort.fact=10) 병합되어 병합 파일을 생성한다. 
+
+* 리듀스 단계 
+- 병합파일들을 읽어서 리듀서 작업을 수행하여 최종파일을 떨어뜨린다. 
+
+
