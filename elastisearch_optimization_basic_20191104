@@ -1,0 +1,42 @@
+** ES introduction 
+https://www.elastic.co/guide/en/elasticsearch/reference/current/elasticsearch-intro.html
+
+- Elasticsearch also has the ability to be schema-less, which means that documents can be indexed without explicitly specifying how to handle each of the different fields that might occur in a document
+- Ultimately, however, you know more about your data and how you want to use it than Elasticsearch can
+- Defining your own mappings enables you to:
+	> Distinguish between full-text string fields and exact value string fields
+	> Perform language-specific text analysis
+	> Optimize fields for partial matching
+	> Use custom date formats
+	> Use data types such as geo_point and geo_shape that cannot be automatically detected
+	
+- Elasticsearch REST APIs support structured queries, full text queries, and complex queries that combine the two
+	> Structured queries are similar to the types of queries you can construct in SQL
+	> Full-text queries find all documents that match the query string and return them sorted by relevance
+
+- There are a number of performance considerations and trade offs with respect to shard size and the number of primary shards configured for an index. 
+	> The more shards, the more overhead there is simply in maintaining those indices. 
+	> The larger the shard size, the longer it takes to move shards around when Elasticsearch needs to rebalance a cluster
+	> Querying lots of small shards makes the processing per shard faster, but more queries means more overhead, so querying a smaller number of larger shards might be faster. In short…​it depends
+	
+- As a starting point to optimize performance 
+	> Aim to keep the average shard size between a few GB and a few tens of GB. For use cases with time-based data, it is common to see shards in the 20GB to 40GB range
+	> Avoid the gazillion shards problem. The number of shards a node can hold is proportional to the available heap space. As a general rule, the number of shards per GB of heap space should be less than 20
+	
+** Quantitative cluster sizing 	
+https://www.elastic.co/kr/elasticon/conf/2016/sf/quantitative-cluster-sizing
+
+- ES Factors 
+	> Size of Shards 
+	> Number of shards on each node 
+	> Size of each document
+	> Mapping configuration ( which fields are searchable / automatic multi-fields / whether message and _all are enabled) 
+	> Backing server capacity (SSD vs HHD, CPU, etc..) 
+
+- Determinations 
+	> How much disk storage will N documents require?
+	> When is a single shard too big for my requirements?
+	> How many active shards saturate my particular H/W
+	> How many shards/nodes will need to sustain X index rate and Y search response 
+- Maximum  number of documents  : 2^31 per shards (2 billion) 
+
