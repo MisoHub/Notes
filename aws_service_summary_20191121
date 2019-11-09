@@ -1,0 +1,114 @@
+
+1. VPC , Virtual Private Cloud 
+> 기능
+- private IP address 를 제공하여, 독립된 클라우드 공간을 제공한다. 
+- secondary IP ranger를 추가하여 확장가능하다. 
+- 하나 이상의 public/private subnet을 통하여 VPC의 private IP 주소 공간을 나누어준다. 
+- network access control list를 통해 각 네트워크에 대해서 inbound/outbound 접근을 제공한다. 
+- S3에 데이터를 저장하고 VPC 내부의 데이터 접근 권한 등을 관리한다. 
+- 하나 이상의 EIP 주소를 부여하여 인터넷을 통해 직접적으로 접근이 가능하도록 한다. 
+- VPC peering을 통해서 private IP 주소로 VPC간 리소스 접근이 가능하도록 한다. 
+- IGW, NAT, FW-proxy를 통한 VPC Endpoint 없이 AWS 서비스에 접근할 수 있다.  (S3, DynamoDB, Kinesis Stream, Service Catalog, EC2 System Manager, ELB API, EC2 API, SNS 등) 
+- AWS PrivateLink를 통해서 개인적인 연결을 하여 자체 서비스나 SaaS에 접근 가능하다. 
+- AWS Site-to-Site VPN을 통해 자체 구성한 IT 인프라(온프렘)과 VPC를 연결할 수 있다. 
+- Classic EC2 인스턴스 플랫폼을 private IP 주소를 통해 VPC 의 인스턴스와 통신할 수 있다. 
+- VPC security Group을 EC2-Classic 인스턴스와 연계할 수 있다. 
+- VPC flow log를 통해서 VPC에 들어오고 나가는 정보를 확인할 수 있다. 
+- IPv4, IPv6를 동시에 사용할 수 있다. 
+- VPC traffic mirroring을 통해서 EC2에 대한 네트워크 트래픽을 확인하거나 미러링 할 수 있다. 
+
+> PrivateLink 
+- Public IP들의 사용없이 VPC 내부에서 수행되는 서비스들에 대한 접근을 하기 위한 기능 
+- 서비스 endpint를 생성 하면 PrivateLink를 사용할 수 있는데 이것의 endpoint가 ENI(Elastic Network Interface)들에 VPC에 대한 IP들이 보이게 된다. IGW,VPN,NAT,Firewall-proxy나 publicIP에 대한 whiltelist없이 접근할 수 있다. 
+- 서비스들은 AWS Direct connect를 기반으로 한 PrivateLink를 통해서 접근하거나, AWS VPN을 통해서 온프렘 어플리케이션들이 VPC 내부로 접근할 수 있다. 
+- PrivateLink에서 현재 EC2 API, ELB API, Kinesis Stream, EC2 System Maanger, Service Catalog, SNS 들이 사용가능하다. 
+	
+>질문 
+- VPC란 무엇인가? 
+. 논리적으로 AWS 클라우드 내에서 고립된 클라우드를 제공하여 AWS 리소스가 VPC위에서 수행될 수 있게 한다. 이것은 개인적인 가상 네트워크에서 IP 주소범위 선택, 서브넷 생성, 라우팅 테이블 과 네트워크 게이트웨이 같은 네트워크 환경을 완벽하게 제어할 수 있게 해준다. 이와 더불어 물리적인 VPN 연결을 기업의 데이터 센터와 VPC 간에 연결하여 데이터센터에 대해 AWS로의 확장성을 제공한다. 퍼블릭 서브넷과 프라이빗 서브넷 구성을 통해서 인터넷 접근이 필요한 레이어와 그렇지 않은 레이어를 나누고, 여러 레이어의 보안 그룹, network access control list를 설정함으로써 각 서브넷 안에 있는 인스턴스에 대한 접근 제어를 할 수 있다. 
+
+- VPC의 컴포넌트는 무엇이 있는가? 
+	. VPC : AWS 클라우드에서 논리적으로 고립된 가상 네트워크 
+	. Subnet : VPC 주소 범위에 대한 부분으로, 서브넷을 통해 독립적으로 리소스 그룹들 위치시킬 수 있다. 
+	. Internet Gateway  : VPC 에서 public 인터넷에 접근하기 위한 게이트웨이 
+	. NAT Gateway : 고가용성을 보장하는 관리형 Network Address Translation 서비스로 private subnet에 있는 리소스에 대해서 인터넷 접근을 가능토록 한다. 
+	. Virtual private gateway : VPC 내부의 VPN 연결을 위한 gateway 
+	. Peering Connection : private IP 주소로 페어링 된 VPC들간의 트래픽 라우팅을 가능하게 하는 연결  
+	. VPC Endpoint : IGW, VPN, FWproxy, NAT접근 없이 VPC 내부의 리소스에서 AWS 에 있는 서비스들에 대한 private 연결 가능하게 함. 
+	. Egress-only Internet Gateway : IPv6에 대해서 VPC 에서 인터넷으로만 나갈수 있는 stateful gateway를 제공 
+- 언제 VPC를 사용해야 하는가? 
+. VPC는 AWS 내부에서 가상내트워크를 구성할 수 있도록 한다. VPN이나 물리전 데이터센터 요구사항 없이. 그 안에서 자신만의 네트워크 구성과 설정을 가능하고 어떻게 EC2 인스턴스들이 네트워크에 노출될 것인지에 대한 제어를 할 수 있다. 또한 보안 옵션들을 VPN 에서 제공함으로써 각 리소스에 대해 더 세밀한 접근 제어를 제공한다. 
+
+- 어떻게 VPC를 시작해야 하는가? 
+. AWS 리소스들은 자동으로 default VPC에 프로비전 되는데, 추가적인 VPC 생성을 AWS 매니지먼트 콘솔을 이용해서 할 수 있다. 네트워크 설정을 위한 기본적인 4가지 옵션을 선택한다.
+1) Amazon VPC with a single public subnet only
+2) Amazon VPC with public and private subnets
+3) Amazon VPC with public and private subnets and AWS Site-to-Site VPN access
+4) Amazon VPC with a private subnet only and AWS Site-to-Site VPN access
+
+- VPC에서 사용가능한 VPC endpoint의 종류는 무엇이며, 차이는 무엇인가? 
+. VPC 엔드포인트는 IGW, NAT, VPN, firewall proxies 를 사용하지 않고 VPC 안의 서비스에 접근할 수 있도록 한다. Endpoint는 수평적으로 스케일아웃할 수 있는 고가용성 가상 장비이다. 이것은 VPC 인스턴스와 AWS 서비스 간의 통신을 허용한다. VPC 는 두가지 다른 타입의 endpoint를 제공한다. 
+1) Gateway type endpoint : 오직 AWS 서비스들(S3, DynamoDB 등)에 대해서만 사용가능하다. 이러한 엔드포인트는 route table에 추가할 수 있고, 아마존 private 네트워크를 통해서 서비스로 트래픽을 라우팅할 수 있다. 
+2) Interface type endpoint  : PrivateLink를 통한 private 연결로 사용자 자체적인 서비스나 Saas 솔루션들을 Direct Connect를 통한 연결을 하고자 할때 사용한다. 
+
+
+2. ELB, Elastic Load Balancing 
+> 개요 : 들어오는 application 트래픽을 EC2, Container, 특정 IP주소, Lambda 함수와 같은 여러 대상에 자동으로 분산시킴. 
+ELB는 단일 AZ, 여러 AZ에서 다양한 application 트래픽을 처리할 수 있습니다. ELB 에서 제공하는 ALB, NLB, CLB 모두 고가용성, 자동 확장/축소, 보안의 기능을 가지고 있음 
+
+> 기능 
+	- High availability : 하나 이상의 AZ에 에 대해서 application 트래픽을 자동 분산함 
+	- Health check : 리소스 대상에 대해서 비정상을 감지하고, 나머지 대상으로 트래픽을 분산함. 
+	- Security : VPC를 사용하여 ELB와 연결된 security group 생성/관리하여 추가적인 보안 옵션 제공 
+	- TLS (transport layer secure) : ELB에서 통합 인증서 관리 및 SSL/TLS 복호화를 지원함으로 로드 밸런서 SSL 설정을 중앙 관리하고 application CPU 집약적 작업을 줄여줌 
+	-  L4, L7 로드밸런싱 
+	- 어플리케이션 성능을 실시간으로 모니터링 할 수 있도록 CloudWatch 지표 및 request 트레이싱, 통합을 제공함 
+
+> 질문 
+	-  나의 application에 맞는 ELB 타입은 어떻게 결정합니까?	
+		. HTTP 요청을 로드밸런싱 하는 경우 ALB 를 사용하는 것이 좋고, L3(network), L4(TCP,UDP) 로드밸런싱 필요한 경우와 높은 성응이 필요한 경우나 지연시간이 낮아야 하는 경우 NLB를 사용하는 것이 좋다. 만약 EC2-Classic 네트워크에 구축된 경우 CLB를 사용해야 한다. 
+	- public IP를 사용하지 않고 VPC에서 ELB API에 비공개 액세스 할 수 있나?
+		. VPC endpoint를 생성하면 VPC에서 ELB API에 비공개로 액세스 할 수 있음. VPC endpoint를 사용하면 IGW, NAT GW, VPN 연결 필요 없이 VPC와 API간 라우팅을 처리함. ELB이 사용하는 최신 VPC endpoint는 PrivateLink를 제공함. 이는 ENI를 사용하는 AWS 서비스와 VPC 내 privat IP 간 프라이빗 연결을 지원해주는 기술 
+	- ELB에 대한 SLA가 제공되는가? 
+		. 99.99% 가용성 보장
+	- ALB 가 지원하는 OS는 무엇인가?  . 모든 운영체제에 대해서 지원함. 
+	- ALB가 지원하는 프로토콜은 무엇인가? HTTP와 HTTPS 를 지원함 
+	- ALB에서 HTTP/2가 지원되는가? 지원됨. HTTP/2를 지원하는 client는 TLS를 통해 ALB와 연결할 수 있음. 
+	- ALB에서 TCP 포트를 사용해 로드밸런싱 가능한가? 1~65535 의 TCP 포트에 대해 로드 밸런싱 수행 가능 
+	- ALB 웹소켓 지원되는가? 웹 소켓 및 보안 웹 소켓 지원이 기본적으로 제공됨 
+	- ALB 에서 request tracing이 되는가? 기본적으로 활성화 되어 있음. 
+	- CLB는 ALB와 동일한 기능 및 혜택을 제공하는가? 일부 중첩이 되는 기능이 있지만, 두 로드 밸런서 사이에 기능 패리티가 없다. ALB가 AWS application 레이어 로드 밸런싱 플랫폼을 담당한다. 
+	- ALB 트래픽만 허용하도록 EC2를 구성 가능? 넹 
+	- ALB 프론트 엔드에 보안 그룹 설정 가능? 넹 
+	- CLB에 사용하는 기존 API를 ALB에 사용할 수 있음? 아니요 새로운 API 세트가 필요함 
+	- ALB와 CLB를 동시에 관리하기 위해서는 어떻게 해야 하는가?
+		. ELB 콘솔에서 ALB, CLB 모두를 관리할 수 있음. CLI / SDK 를 사용하는 경우 ALB 에 대해서는 다른 서비스를 이용해야 한다. 예를들어 CLI에서는 예를 들어 CLI에서는 Classic Load Balancer를 `aws elb describe-load-balancers`로 설명하고, Application Load Balancer는 `aws elbv2 describe-load-balancers`로 설명합니다.
+	- CLB를 ALB로 전환하거나 그 반대로 전환 가능합니까? 아니요, 전환할 수 없지만, CLB를 ALB로 마이그레이션 가능합니다. 
+	- ALB를 4계층 로드 밸런서로 사용할 수 있습니까?? 아니요. 그럴 경우 NLB를 써야 합니다. 
+	- ALB를 사용해 HTTP 및 HTTPS 요청을 처리할 수 있습니까? 예. 80 포트, 443 포트 에 대한 리스너를 추가 가능합니다. 
+	- 보안/운영 이슈 해결 목적으로 account 에서 이루어진 ALB 로드밸런싱 API 호출을 기록할 수 있습니까? 
+		. 네. CloudTrail 을 사용하여 API 호출 기록을 얻을 수 있습니다. 
+	- ALB는 HTTPS 종료를 지원합니까? 
+		. 네. HTTPS 연결을 종료할 수 있습니다. SSL 인증서를 설치해야 합니다. 인증서를 사용하여 HTTPS 를 종료한 후 클라이언트 요청을 복호화 하여 대상으로 전송해야합니다. 
+	- SSL 인증서를 받으려면 어떻게 해야 합니까? 
+		. AWS Certificate Manager를 사용하여 SSL/TLS 인증서를 프로비저닝 할 수 있습니다. 또는 인증서를 요청하고 
+		요청한 인증서에 CA 서명을 받은 후, AWS Certification Manager 또는 AWS IAM 서비스를 사용하여 인증서를 업로드해 다른 곳에서 인증서를 확보할 수도 있습니다. 
+	- ALB에서 백엔드 서버 인증이 지원됩니까? 아니요 ALB를 사용하는 백엔드에 대해서는 암호화만 지원됩니다. 
+	- VPC와 온프레미스 위치에 배포된 애플리케이션을 로드 밸런싱 하려면 어떻게 해야 합니까? 
+		. APP이 vpc와 온프렘에 분포되어 실행된다면, 대상 IP주소를 사용해 대상을 같은 target group 으로 추가할 수 있음. 
+		APP 에 영향 없이 AWS 마이그레이션 하기 위해 점진적으로 VPC 대상을 target group 에 추가하고 온프렘 서버를 제거함. 
+		. 또는 VPC와 온프렘을 별도의 ELB로 구성한 뒤 Route53에서 DNS 가중치를 사용하여 로드 밸런싱 할 수 있습니다. 
+	- NLB 리스너에 대해 4계층을 생성할 수 있습니까? 네, TCP/UDP , TLS  리스너 모두를 지원함 
+	- NLB 주요 기능은 무엇입니까? 
+		. NLB는 초당 수백만개 요청과 변동성이 높은 갑작스러운 트래픽 패턴을 처리하도록 설계하였으며, 지연시간이 매우 짧습니다. NLB는 TLS 종료를 지원하고 클라이언트 소스 IP를 유지하여 안정적인 IP지원 영역 격리 기능을 제공합니다. websocket 유형의 어플리케이션에 매우 유용한 장기간 연결도 지원합니다. 
+	- CLB의 TCP 리스너와 비교하여 NLB는 어떻게 다릅니까? 
+		. NLB는 CLB에서 유지하지 않는 client 소스 IP를 유지합니다. 고객은 CLB에서 proxy protocol을 이용해 source IP를 얻을 수 없습니다. NLB는 AZ 별로 고정 IP를 자동으로 제공하며, 로드 밸런서에서 AZ 당 EIP도 할당할 수 있지만, CLB는 제공하지 않습니다.
+	-CLB에서 NLB로 마이그레이션 가능합니까? 네. 
+	- ELB-제공 IP와 탄력적 IP가 혼합되었거나 프라이빗 IP가 할당된 Network Load Balancer를 사용할 수 있습니까?	
+		. 아니요. Network Load Balancer의 주소는 사용자 또는 ELB가 완벽하게 제어해야 합니다. 이렇게 해야만 Network Load Balancer에서 탄력적 IP를 사용할 때 클라이언트가 알고 있는 모든 주소가 변경되지 않습니다.
+	- CLB가 지원하는 프로토콜은 무엇입니까? HTTP, HTTPS, SSL, TPC 
+	- CLB에 보안그룹을 설정 할 수 있나? 예. vpc를 사용하는 경우 CLB에 보안그룹 구성 가능 
+	
+	
+		
+	
