@@ -110,5 +110,19 @@ ELB는 단일 AZ, 여러 AZ에서 다양한 application 트래픽을 처리할 �
 	- CLB에 보안그룹을 설정 할 수 있나? 예. vpc를 사용하는 경우 CLB에 보안그룹 구성 가능 
 	
 	
+3. CloudFront
+- CDN, content delivery network 서비스로 보안적으로 데이터, 비디오, 어플리케이션 API들을 낮은 latency로 글로벌 고객에게 제공한다. CloudFront는 AWS에 통합되어 있는데, 물리적인 위치와 그것의 서비스들이 직접적으로 연결하였다. 
+CloudFront는 AWS Shield를 통해서 DDoS, Distribute Denial of Service attack 등에 대한 균일하게 동작한다.   
+
+> 기능 
+	- 글로벌 엣지 네트워크 제공 200개의 PoP(189개의 edge location, 11개의 edge cache) 
+	- 보안 
+		. network/application layer 보호
+		. SSL/TLS 암호화 및 HTTPS 활성화 가능
+		. 액세스 제어 가능 
+		. 인터넷 규정 준수 
+	- 성능 
+		. 네트워크 최적화 
+		. 동적 및 정적 컨텐츠 
+		. 대규모 라이브러리와 미디어 애셋 
 		
-	
