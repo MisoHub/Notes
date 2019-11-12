@@ -117,21 +117,58 @@ CloudFront는 AWS Shield를 통해서 DDoS, Distribute Denial of Service attack 
 > 기능 
 	- 글로벌 엣지 네트워크 제공 200개의 PoP(189개의 edge location, 11개의 edge cache) 
 	- 보안 
-		. network/application layer 보호
-		. SSL/TLS 암호화 및 HTTPS 활성화 가능
-		. 액세스 제어 가능 
-		. 인터넷 규정 준수 
+		. network/application layer 보호 : GW 역할소 사용함으로써 컨텐츠, 데이터, 코드 및 인프라에 대한 주요 공격을 차단
+		. SSL/TLS 암호화 및 HTTPS 활성화 가능 : ACM을 사용해 SSL 인증서를 쉽게 생성하고 CloudFront에 무료 배포가능. 
+		. 액세스 제어 가능 : 서명된 URL과 서명된 쿠키를 사용해 토큰 인증을 지원하여 인증된 최종 사용자만 액세스
+		. 인터넷 규정 준수 : 표준을 준수 
+	- 가용성 
+		. 앱 가용성 향상 : CloudFront의 엣지 로케이션에 콘텐츠를 캐싱해 워크로드 줄일 수 있음
+		. 여러 오리진을 설정하여 백엔드 아키텍처에 중복성 활성화 허용. 백업 오리진에서 콘텐츠 자동 제공 가능. 
 	- 성능 
-		. 네트워크 최적화 
-		. 동적 및 정적 컨텐츠 
-		. 대규모 라이브러리와 미디어 애셋 
+		. 네트워크 최적화 : AWS 글로벌 백본에서 실행되고, 여러 리전 및 앱에 걸쳐 edge 와 기타 AWS 간 요청 최적화
+		. 동적 및 정적 컨텐츠 : ??? 
+		. 대규모 라이브러리와 미디어 애셋 : CDN이 객체를 더 오래 유지하고 캐시 회전을 줄이도록 설계
+	- 프로그래밍을 통한 배포, DevOps 지원 
+		. API와 DevOps 제공 
+		. 엣지의 다양한 동작방식 제공 
+		. lambda@edge 를 사용해 코드를 사용자 더 가까운 위치에서 수행하는 것이 가능
+	- 비용 효율적 
+		. 사용한 만큼만 지불하는 일반요금과, 약정 트래픽 개별요금 제공 
+		. AWS 클라우드와 CloudFront 간의 무료 데이터 전송 
+> 시작하기 
+	- 컨텐츠를 빠르게 전달하기
+		. S3 버켓에 static content를 업로드하여, 그 S3 버켓을 CloudFront origin으로 사용할 수 있다. S3는 image, videos, HTML 페이지, .css 파일 .js 파일 등을 포함하여 CloudFront origin으로 사용하기 좋다.
+		. 우선 S3에 static content를 read/write 권한으로 주고, public access 를 허용시킨다. 
+		. 그 다음 CloudFront에서 'create distribution'을 수행한다. distribution의 설정에서 사용자가 요청할 때어떠한 origin에서 content를 가져올 것인지 설정하게 된다.  이번에 web-distribution은 S3(static)과 httpserver(dynamic)을 선택하면 된다. 
+			1) 우선 컨텐츠 전달 방법을 설정한다. 'web distribution'은 static+dynamic content 위해 사용되고, 'RTMP distribution'은 어도비 플래쉬 미디어 서버의 RTMP 프로토콜을 사용하여 최적의 streaming media file을 위해 사용된다. 	여기서는 web-service를 수행할 것임으로 'web distribution'을 선택한다. 
+			2) Origin Domain Name에 static content를 저장한 S3 버켓 이름을 입력하고, 나머지 설정은 default로 두고 distribution을 생성한다. 
+			3) distribution 배포가 끝난 뒤 cloud front 도메인 명을 확인하고, 이미지 경로에 CloudFront의 distribution에 할당된 domain 이름을 입력한다. 그리고 object name에 S3버켓에 저장한 이미지 파일 이름을 입력한다. 
+			4) 웹 페이지를 열면 해당 경로에서 파일을 가져오는 것을 확인할 수 있다.
+			5) distribution의 사용이 종료되면 쉽게 disable 시킬 수 있고 과금되지 않는다. 그 후 해당 distribution을 사용하는 웹페이지들은 모두 사용이 불가능해진다. 
+
+4. CloudTrail 
+> 개요 
+	- AWS account에 대한 governance, compliance, operational audit, risk audit 을 제공하기 위한 서비스. 
+	- AWS infra 레벨에서 account 활동과 관련된 작업을 기록하고 지속적으로 모니터링 하며 보관할 수 있음. 
+	- 관리 콘솔, SDK, CLI 등을 통해 작업을 수행하거나 정볼르 가져올 수 있으며, 이를 통해 보안 분석, 리소스 변경 추적, 트러블 슈팅을 빠르게 할 수 있음. 
+> 기능
+	- Always on : 계정 활동에 대해서 항상 on 상태로 수행되며 최근 90일의 account 활동들(서비스에 대한 생성, 수정, 삭제 명령)을 수동적인 CloudTrail 설정 없이도 사용할 수 있다. 
+	- Event history : AWS account의 활동에 대해 조회, 검색, 다운로드 할 수 있고 account 리소스 변화를 시각화 함으로써 보안 분석이나 운영 이슈 해결을 단순화 시킨다. 
+	- Multi-region configuration : 하나의 계정에 대해 여러 리전에 대한 CloudTrail 로그를 하나의 S3 버켓에 전달하도록 설정할 수 있는데, 이것은 기존에 존재하는 리전 뿐만 아니라 새로 런치되는 리전에도 적용된다. 
+	- Log file integrity validation : S3에 저장된 /CloudTrail 로그 파일에 대한 무결성을 검증할 수 있으며, CloudTrail 이 S3에 기록한 뒤로 로그파일이 변경되었는지, 수정되었는지 삭제되었는지 확인 가능하다. 
+	- Log file encryption : 기본적으로 CloudTrail은 S3 버켓의 모든 로그파일에 대해서 S3 server-side encryption(SSE)를 적용한다. 필요에 따라서 AWS Key Management Service를 이용해 보안 단계를 추가할 수 있다. 로그를 조회하는 사용자는 decryption 권한이 있다면 자동적으로 복호화하여 데이터를 조회하게 된다. 	
+	- Data events : data event는 리소스에 대해 수행되는 명령에 대해 통찰을 준다. data event 높은 볼륨 활동들에 대해 수행되고, S3 object level API들이나 API로 인한 Lambda 함수 수행과 같은 API 연산 등에 대한 로그를 남긴다. (람다 수행, IAM 사용자/서비스 API 호출 등)
+	- Management events : 관리측면에서 수행되는 활동(EC2 인스턴스 생성, 삭제 수정 등)이나 IAM 권한 추가, IP 주소 할당 등 에 대한 이벤트도 로그로 남긴다. 
+	- 통합 
+		. lambda와 통합되어 S3에 로그를 쓰면 S3는 람다를 호출하여 로깅된 정보에 대한 처리를 수행할 수 있다. 
+		. CloudWatch가 CloudWatch와 CloudTrail에서 기록되는 로그에 대한 관리를 할 수 있게 한다. 메트릭을 생성하여 이벤트를 모니터링하고, 검색하고 AES 나 lambda로 로그를 스트리밍 할 수 있다. 
+		. CloudWatch Event와 통합함으로써 자동적으로 AWS 리소스 변화에 대한 반응을 할 수 있다. 이를 통해 CloudTrail 특정 로그에 대해서 액션을 정의할 수 있다. CloudTrail이 EC2에 대한 security group 변경을 확인하면, CloudWatch가 lambda 함수를 수행할 수 있다. 
+> 질문 
+	- CloudTrail이란 무엇인가? AWS CloudTrail은 사용자 계정에서 이루어진 활동을 기록하고, 로그 파일을 사용자의 Amazon S3 버킷으로 전달하는 웹 서비스
+	- CloudTrail의 이점은 무엇인가? CloudTrail은 사용자 계정에서 이루어진 작업을 기록함으로써 사용자 활동에 대한 가시성을 제공합니다. CloudTrail은 요청한 사람, 사용된 서비스, 수행된 작업, 작업의 파라미터, AWS 서비스에서 반환한 대응 요소를 비롯하여, 각 작업에 대한 중요 정보를 기록합니다. 이러한 정보는 AWS 리소스에 이루어진 변경 사항을 추적하고 운영 관련 문제를 해결하는 데 도움
 	
-
-
-
-
-
-
+5. CloudWatch 
+> 개요 
 
 10. Athena 
 > 개요 
@@ -207,7 +244,6 @@ CloudFront는 AWS Shield를 통해서 DDoS, Distribute Denial of Service attack 
 	- Kinesis Data stream (KDS) = hbase-phoenix
 		. 다양한 실시간/스트리밍 데이터에 대해서 수 많은 소스에서 초당 기가바이트 규모 데이터를 가져와 분석/처리하기 위한 서비스.
 		
-
 	- Kinesis Data firehose
 	- Kinesis Data analytics
 	- Kinesis Video Data stream
