@@ -220,8 +220,32 @@ CloudFront는 AWS Shield를 통해서 DDoS, Distribute Denial of Service attack 
 		. ML을 통하여 지속적으로 시스템과 어플리케이션에 대한 time series에 대한 지속적인 분석을 통하여 정상 상황을 정의하고 최소한의 사용자 개입을 통해 비정상 상황을 드러낸다. 
 		. 자동으로 정의된 임계값에 대해서 알람을 생성할 수 있다. 그리고 anomaly detection을 통한 지표 시각화도 가능하다. 
 		. CloudWatch 콘솔에서 Alarms 패널에 가서 알람을 생성하거나, Metrics에서 지표의 예상 값을 입력할 수 있다. 
-		
-		
+
+6. Amazon Identity and Access Management (IAM) 
+> 개요 
+	- IAM은 AWS 서비스와 리소스에 대한 접근을 관리하여 보안을 강화하기위한 서비스이다. 
+	- AWS 사용자와 그룹을 생성하고 권한적용을 통해 AWS 리소스에 대한 접근을 허용/거부 할 수 있다. 
+	- IAM은 AWS account에 대한 추가적인 비용이 없으며, 사용하는 AWS 서비스에 대해서만 비용이 부과되어진다. 
+> 기능 
+	- 보안성 강화 / 세밀한 컨트롤 /임시적인 인증(roles) / 유연한 보안 인증 관리(pw, key-pair, X.509 cert, MFA) / 외부 인증 시스템 강화 (AD, Web Identity Provider 제공) / AWS 서비스와의 쉬운 통함 / 의도된 사용과 제한  
+> 질문 
+	- IAM 이란 무엇인가? 
+		. Identity and Access Maangement로 개별 사용자 및 그룹에 대한 AWS resource 접근을 보안적으로 제어하기 위한 서비스이다. 
+		. Identity(IAM user)를 생성하고 권한을 부여함으로써 resource에 대한 접근제어를 할 수 있다. 
+		. 추가적으로 AWS 밖의 사용자(federated users-OSS)에 대한 권한도 부여 가능하다. 
+	- 어떻게 IAM을 시작할 수 있는가? 
+		. IAM을 시작하기 위해서는 적어도 하나의 IAM과 통합된 AWS service가 존재해야 한다. 
+		. 그 뒤에 사용자, 그룹, 권한을 IAM API, CLI, IAM 콘솔을 통해서 생성하고 관리할 수 있다. 
+	- IAM으로 해결되는 문제는 무엇인가? 
+		. IAM user와 그들의 접근을 관리 제어 : 사용자 개별적으로 인증서(access key, password, MFA 장비) 또는 임시적인 보안 인증서를 요청하여 AWS 서비스와 리소스에 접근 가능하다. 사용자가 수행할 수 있는 기능을 명시할 수 있다. 
+		. 연합 사용자(타 계정의)에 대한 관리 제어 : 유효기한 설정과 함께 보안 인증서를 요청하여 사용자들이나 application이 AWS account안에 있는 리소스에 대해 보안적 접근을 가능하도록 한다. 
+	- 누가 IAM 을 사용할 수 있는가? 
+		. AWS 고객에 대해서 추가적인 비용없이 서비스가 제공됨. 비용은 AWS 서비스를 사용할 때만 부과됨 
+	- user의 정의는 무엇인가?
+		. AWS 서비스와 어플리케이션에서 인지하는 유일한 identity로 OS의 사용자와 유사한 개념이다. pw와 access key와 같은 보안 증명을 통해서 인증할 수 있으며 unique name을 갖는다. 
+		. user는 AWS 서비스에 접근하는 개인, 시스템, application일 수도 있다. IAM 은 이러한 user들을 IAM users 라고 칭하면서 IAM 에서 관리한다.
+		. 또한 AWS 외부에서 관리되는 사용자 에 대하여 AWS resource에 대한 접근 권한을 부여할 수 있는데, 이러한 AWS 외부 사용자를 ferderated users 라고 한다. 
+	
 10. Athena 
 > 개요 
 	- S3있는 데이터를 interactive 하게 SQL 표준을 사용하여 분석하기 위한 서비스. 
