@@ -1,0 +1,272 @@
+
+** session 1 > AWS network configuration 
+
+ALB 
+- HTTP, HTTPS, HTTP/2, WebSocket 지원 
+- L7 (application layer) 
+- 리스너 / 타겟 그룹으로 구성 
+- 컨텐츠 기반 라우팅 가능 (path / host 기반) 
+- 마이크로서비스, 컨테이너 기반 application 과 호환 가능 
+- Amazon ECS, EKS와 호환 가능 
+
+ALB - listener 
+- 리스닝 포트/프로토콜 지정 
+- ALB당 최소 1개 지정해야 함 
+- 최대 50개 까지 지정 가능 
+- 컨텐츠 기반 룰 지정 (host /path) 
+
+ALB - target group
+- ALB 타겟에 대한 논리적 그룹 
+- 타겟 그룹에 포함 가능한 리소스 목록
+	. EC2 인스턴스 
+	. ECS, EKS container 
+	. IP address
+	. 람다 
+
+NLB 
+- TCP / UDP / TLS 지원 
+- L4 (transport layer) 
+- 고성능 처리, 낮은 지연성 
+- NLB에는 AZ당 하나의 고정 IP가 부여됨 
+- 오랫동안 지속되어야 하는 connection이 필요한 app 에 유용 
+	. IoT, game, messaging application 
+- ALB와 동일하게 리스너, 타겟 그룹, 타겟으로 구성 
+- 룰 추가 해 포트 기반으로 트래픽 처리함 
+- TLS termination, ACM 연동 가능 
+
+ALB-NLB
+- 둘 모두 VPC 위에서 수행됨 
+- sticky session은 ALB만 지원됨 
+- 고정IP 지원은 NLB만 제공됨 
+- L4 위의 패킷 정보는 ALB에서만 사용될 수 있음 (host-base, path-base, SNI, backend server encryption..) 
+
+ELB 선택/고려사항 
+- IP가 지속적으로 변경될 수 있음 
+	. IP가 아닌 DNS 를 사용하도록 해야 한다 
+	. DNS의 CNAME 레코드, route53의 alias 레코드 사용 
+	. 고정IP가 필요한 경우는 NLB를 고려해야 한다. 
+- ELB에서 TLS termination
+	. Backend EC2 인스턴스의 SSL 부하 감소 - 모두 지원 (CLB, ALB, NLB) 
+	. Backend ELB와 EC2 인스턴스간 mutual SSL 구현 가능 
+- Cross zone load balancing : ??
+- skicky session : ALB만 지원 
+
+Route53 
+- 고가용성 cloust 기반 확장가능한 DNS 서비스(GSLB +L4/L7) 
+- 100% SLA 지원 
+- 다양한 라우팅 지원 (지연기반, 지역기반, 가중치 기반) 
+- DNS failover(active-standby) + health check(L4, L7 에 대한)  지원 
+- Domain registration 지원 
+- Zone apex 통합 : ELB, S3, CloudFront(CDN)
+- VPC 내 자원들을 위한 private DNS 서비스 제공(private hosted zone) 
+
+Route53 - public hosted zone 
+- 도메인 별도 구입 필요 
+- 인터넷에서의 도메인 트래픽을 라우팅
+- 가중치 기반 레코드 및 장애 조치 레코드를 포함한 모든 옵션 사용가능 
+- public 서비스 
+
+Route53 - private hosted zone 
+- 도메인 구입 불필요 
+- VPC 내 도메인 트래픽 라우팅 
+- 가중치 기반 레코드 및 장애조치 레코드만 연결 가능 
+- private 서비스 
+
+Route53 시작 
+- DNS name을 새로 등록하거나 외부 기관으로 부터 domain tranfer 
+- 기존 domain의 sub-domain을 route53에 위임 
+- Route53에 hosted zone 생성 
+- domain register에 업데이트 
+- DNS 레코드 생성 및 맵핑 
+
+* 고려사항 
+- EC2 관점에서 traffic flow 고려 
+- Coludformation template 작성
+- VPC 내부 / VPC 외부 서비스를 구분 *** 
+- 서비스 제약사항 확인 : EIP 는 region 당 5개 부여 가능 
+
+
+
+** session 2 > AWS IAM 
+
+IAM policy 란? 
+- AWS 서비스와 리소스에 대한 인가 기능을 제공 
+- 어떠한 principal이 어떤 condition에서 어떤 resource에 대한 어떤 action 을 allow/deny 할 것인지 지정 
+
+IAM 사용자 / 그룹 
+- IAM group은 동일한 권한을 가져야 하는 IAM User에게 권한 부여 편의성을 제공하기 위함. 
+- IAM group 이 보안 주체가 되지는 않음 
+- 하나의 account에는 다수의 group , 그룹 안에 다수의 사용자 포함 
+- 권한은 그룹 단위로 지정 , 그룹 안의 사용자는 같은 policy를 지정됨 
+- IAM User는 최대 10개의 IAM Group에 속할 수 있음 
+
+IAM policy의 종류와 목적 
+- AWS Organizations : AWS account 내의 특정 principal에 대한 서비스 제어 
+	.  SCP (Service Control Policy) 
+- AWS IAM : IAM Principal(Users, Roles)에 대한 상세 권한 설정 및 사용 가능한 권한 경계 
+	. Permission policies
+	. Permission boundaries 
+- AWS Security Token Service (SWA STS)  : 일반적인 권한 공유를 제한적으로 허용 
+	. Scoped-down policies 
+- Specific AWS Services : 다수의 계정 접속이나 서비스로부터의 접근을 제어 
+	. Resource-based policies 
+- VPC Endpoints	: VPC Endpoint에서 서비스로의 접근을 제어 
+	. Endpoint Policies 
+
+
+정책 분류 
+- Identity 기반 정책 
+	. SCP (Service Control Policy) 
+	. Permission Policy 
+	. Permission Boundary 
+	. Session Policy 
+- Resource 기반 정책 
+	. Bucket Policy 
+	. Access Control List 
+
+IAM Policy 의 구조 
+- Effect : 명시된 정책에 대한 허용/차단 (Allow / Deny) 
+- Principal : 접근을 허용/차단하고자 하는 대상 (user, group 등) 
+- Action : 허용/차단 하고자하는 접근 타입 (s3:GetObject 등) 
+- Resource : 요청의 목적지가 되는 서비스 (am:aws:sqs:us-west-2:12312412414:queue1)
+- Condition : 명시된 조건이 유효하다고 판단될 수 있는 조건 (StringEqualIfExists : {aws:RequestTag/project:[Pickles])
+
+IAM 허용 권한 획득 조건 
+- SCP + Permission Boundary + Permition Policy + Session Policy 를 모두 만족 시켜야 한다. 
+
+IAM 권한 할당 매커니즘 
+- 명시적 deny 에 적용되지 않아야 함 
+- 나머지 policy 에 대한 특정한 allow 에 따른 묵시적 deny에 포함되지 않아야 한다. 
+- 묵시적 deny는 관리자가 설정하지 않는 정책에 대해서는 묵시적으로 차단된다..  = 명시적 allow 정책이 있어야 한다. 
+- 하나에 명시적으로 allow 되더라도, 다른 곳에 명시적으로 deny 되게되면 접근이 안된다. 
+- 결과적으로 어느 policy에도 명시적  deny가 없어야 하고, 모든 곳에 명시적 allow 정책이 있어야 한다. 
+
+
+동일 account에 대한 허용 권한 획득 조건 
+- ID 기반 policy 에서 명시적 차단이 없어야 하고, 명시적 허용 조건이 있어야 한다. 
+- resource 기반에서도 허용이 되어 있어야 한다. 
+- 이 둘 중 하나만 만족하면 접근이 가능하다. 
+
+다른 account에 대한 허용 권한 획득 조건 
+- 명시적 deny가 없어야 하며, ID 기반 policy 와 resource policy를 모두 만족 시켜야 한다. (명시적 허용이 있어야 한다.) 
+- 외부 계정이 접근하려면 (S3 경우) S3 policy를 생성하여 명시적으로 허용하는 구문을 넣어야 한다. 
+
+IAM 사용 TIP
+- IAM role을 적극적으로 활용하여라 
+	. 보안성: 토큰 기반으로 LIFETIME 적용할 수 있다. 
+	. 편의성: 
+	. 무료:별도 과금 없음 
+
+멀티 계정 환경에서의 자원 공유 
+- 멀티 계정 환경에서 서로 다른 계정간에 접근 권한을 제공하기 위해서는 롤을 생성하여 제공하는 것이 좋다 
+- 개발 account에서 운영 account에 특정 리소스에 접근하려고 한다면 
+	. 운영 account의 롤을 생성한다. ( dev account IAM 사용자 신뢰 -> 롤의 권한 할당 -> 롤을 dev account IAM 사용자에게 제공) 
+- 롤을 사용하면 패스워드 관리가 없어진다. 
+- TAG를 통해서도 접근 권한을 제어할 수 있다. 
+
+** session 3 > AWS WAF -- skipped 
+** session 4 > AWS IAM 
+
+Cloud Developemtn Kit (AWS CDK)
+- 오픈소스 소프트웨어 개발 프레임 워크 
+- CloudFormation 를 통해서 구성 가능 
+
+개발환경 진화 과정 
+- 관리 콘솔로 리소스 만들기 
+- 코드 형태의 명령형 인프라 
+- 코드로서의 선언적 인프라 , 서비스 별로 YAML 을 작성, 리소스 간의 의존성을 명시하기 어려움 
+- CDK :  
+	. 친숙한 개발 언어로 작성, 단일 생성자를 기반으로 많은 AWS 리소스를 생성 . 생성자는 간단한 클래스로 각각의 스택을 구성 . 여전히 선언적이지만 생성과 업데이트 처리를 할 필요가 없음. 
+	
+CDK 메인 구성요소 
+- Core framework 
+- Construct Library 
+- CDK CLI 
+CDK CLI 명령 종류 
+APP 개발하기 
+Cloud9 : development environments // 클라우드기반의 IDE. 
+
+** session 5 > Serverless
+서버리스를 하는 이유 :  관리의 목표는 관리 대상 제거하는 것 
+- 서버에 대한 고민 없이 어플리켕시ㅕㄴ을 구축/작동하도록 함 
+
+서버리스 - 클라우드 컴퓨팅의 진화 /배포시간 기준 
+> 데이터 센터 > 가상 서버 > 컨테이너 > 서버리스 (AWS lambda) 
+
+서버리스컴퓨팅 이점 
+- 서버 준비/관리 불필요 
+- 미실행 시 과금 안함 
+- 사용량 기반 자동확장
+- 가용성 및 장애 방지 
+
+AWS 서버리스 종류 
+- AWS lambda 
+- Amazon API Gateway : 람다에 대한 end-point 
+- AWS Step Function 
+- Kinesis, Athena
+- Greengrass
+- X-Ray
+- lambda@edge 
+
+예제. 서버리스 웹 앱 : 단일 페이지 앱(single page app) 
+- 프론트 엔드는 CloudFront + S3 로 구현한다 
+- 백엔드는 API Gateway + Lambda 로 구현한다 
+- 접근제어 Cognito, Pinpoint, .... 
+
+서버리스.프론트엔드 
+- 레파지토리 연결 
+- 빌드 설정 구성 
+- 앱 배포 
+
+AWS amplify console
+- AWS Amplify를 통해 빌드하고 배포한다 
+- 다양한 배포 등을 지원한다. 
+
+서버리스.백엔드 
+- API GW
+	. 손쉬운 API 생성 및 배포 
+	.REST API 및 WebSocket API 지원 
+	. 변경사항을 안전하게 roll-out 하기 위한 canary release
+	. 다양한 플랫폼에 대한 SDK 생성 
+	. API 사용 및 API 변경에 대한 CloudTrail 로깅/모니터링 
+	. 강력하고 유연한 인증 메커니즘 
+	. 타사 개발자를 위한 API 키를 제공할 수 있음. 
+	
+Amazon API GW 종류 
+- Optimized 
+- Region 
+- Private : VPC PrivateLink 를 통해 VPC 내의 API GW 로 연결 
+
+API GW 기능 
+- 
+
+AWS Lambda 
+- 모든 유형의 어플리케이션이나 백엔드 서비스에 대한 코드를 별도 관리 없이 실행 
+
+이벤트 소스 > 람다 함수 > 외부 서비스 호출 (API로 접근 가능한 모든 서비스 호출 가능) 
+
+AWS Lambda 함수 구조 
+- 
+
+AWS lambda 함수 코드 모범 사례 
+- 코드 패키지 사이즈 최소화 : cold start 최소화 
+- Lambda handler 와 core logic 분리 
+- Execution context 재사용 활용
+- AWS System ,,,
+
+Amazone Cognito 
+- 사용자 풀 및 자격 증명 풀을 제공. 사용자 풀은 앱 사용자의 가입 및 로그인 옵션을.. 
+
+Cognito.사용자 풀 
+- 가입 및 로그인 서비스 
+
+Cognito.자격증명 풀 
+
+데모
+
+https://aws.amazon.com/ko/blogs/korea/tag/webinar/
+
+
+
+
+
