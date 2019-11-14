@@ -245,7 +245,92 @@ CloudFront는 AWS Shield를 통해서 DDoS, Distribute Denial of Service attack 
 		. AWS 서비스와 어플리케이션에서 인지하는 유일한 identity로 OS의 사용자와 유사한 개념이다. pw와 access key와 같은 보안 증명을 통해서 인증할 수 있으며 unique name을 갖는다. 
 		. user는 AWS 서비스에 접근하는 개인, 시스템, application일 수도 있다. IAM 은 이러한 user들을 IAM users 라고 칭하면서 IAM 에서 관리한다.
 		. 또한 AWS 외부에서 관리되는 사용자 에 대하여 AWS resource에 대한 접근 권한을 부여할 수 있는데, 이러한 AWS 외부 사용자를 ferderated users 라고 한다. 
-	
+
+7. S3 
+> 개요 
+	- 비계층적 플랫구조로 데이터는 'bucket'이라는 리소스에 object로 저장되며, object 하나의 크기는 최대 5TB까지 가능. 
+	- prefix 라고 하는 공유이름을 사용하여 구성할 수 있음. 
+	- S3 object tag 라고 하는 key-value 쌍은 최대 10개까지 객체에 추가할 수 있고, 이러한 pair를 통해 객체 수명주기 동안 생성/업데이트/삭제 할 수 있음. 
+	- S3 inventory 를 통해서 S3 버켓에 저장된 object 또는 특정 prefix 를 가지고 있는 object에 대한 레포트와 그 object의 메타데이터, 암호화 상태 등을 확인할 수 있음. 매일/매주 생성하도록 설정할 수 있음. 
+> 기능 
+	- 스토리지 관리 기능 
+		. S3 bucket 이름, prefix, object tag 그리고 S3 inventory를 통해 데이터에 대해 그룹화 하고 레포트 할 수 있으며 다른 S3 동작에 대한 설정을 할 수 있다. 
+		. S3 batch operation을 통해 수천개의 object를 저장할 수 있고, S3에 어떠한 규모로도 저장할 수 있도록 해준다.  
+		  batch operation을 통해 버켓간 이동, object tag 설정 변경, 접근 제어 수정, S3 Glacier로 부터 아카이브된 오브젝트 복구 등을 수행할 수 있다.  이때 S3 API, S3 관리 콘솔이 사용된다. 
+		  batch operation은 AWS lambda 함수를 사용해 object를 통한 비즈니스 로직 처리를 수행할 수 있게 한다. 
+		  batch operation 이 수행 완료된다면, 알람을 받거나 변화에 대한 레포트를 받을 수 있다. 
+		. S3는 데이터에 대한 버전 관리, 의도치 않은 삭제 방지, 여러 region 간의 데이터 복제를 통해서 데이터를 유지시켜준다.  
+		S3 Versinoing 은 쉽게 이전 버전의 object로 복구 할 수 있도록 해준다. Multi-Factor Authentication(MFA) delete 를 설정하여 의도치 않은 삭제를 막을 수도 있다. MFA 가 활성화된 버켓의 객체를 삭제할 때는 AWS account 인증과 승인된 인증 장비에 보여지는 문자열을 입력해야 한다. S3 Cross Region Replication(CRR) 을 통해서 오브젝트(그것들의 메타데이터와 오브젝트 태그를 포함)를 여러 리젼에 복제하게 된다. 
+		. 또한 S3 Object Lock을 통해서 WORM, write-once-read-many를 강제 할 수도 있다. 이 기능을 통해 retention 정책에 반하여 object version delete 을 방지할 수 있다. 이것은 complication 규제를 지키기 위한 방법으로도 사용된다. 이러한 object lock은 다른 sotrage class로 변경이되어도 적용이 된다. object lock은 2가지 방법에 의해서 설정되는데 governance mode 로 배포될 때 IAM 권한이 있는 AWS 계정은 S3 object lock을 삭제할 수 있따. 만약 더 강한 규제가 필요하다면, Compliance Mode를 사용할 수 있따. 이것을 통해서 root account 를 포함한 어떠한 계정도 삭제하지 못하도록 설정할 수 있다. 
+	- 스토리지 모니터링 
+		. AWS Cost Allocation Report 를 통해서 버켓 태그를 통한 사용량과 비용 집계를 할 수 있다. 버켓 태그는 여러 비즈니스 들에 대해 비용을 확인하기 위해서 적용하는 것이다. 
+		. Amazon CloudWath를 이용해서 AWS resource 상태나 billing 경고를 보낼 수 있다. 
+		. S3 Event Notification을 설정하여 workflow, alert, lambda 함수를 트리거 할 수 있다. 특정 S3 리소스에 대한 변경 작업이 발생하였을 때마다. 
+	- 스토리지 클래스 
+		. 서로다른 6개의 storage class를 제공함으로써 다른 비용과 데이터 접근 방식을 제공해준다. 
+		. S3 Storage Class Analysis 를 통해서 접근 패턴을 모니터링 하고 더 낮은 비용의 클래스로 옮겨야 하는 객체들을 확인해준다. 
+		. S3 Lifecycle을 설정하여 데이터 전송을 할 수 있으며, 객체에 대한 만료 기한을 정할 수도 있다. 
+	- 접근 관리 및 보안 
+		. S3기본적으로 S3리소스를 생성한 사람만 접근할 수 있도록 설정되어 있다. 다른 사용자를 위해서 여러 접근 관리 기능을 제공하고 있다. 
+		. IAM을 통해서 사용자를 생성하고 그들만의 접근 권한을 설정하거나, Access Control Lists(ACLs)을 각 오브젝트 별 권한 있는 사용자에게 접근할 수 있도록 설정하거나, bucket policies를 통해 하나의 S3 버켓에 대한 권한을 설정할 수도 있다. 
+		Query String Authentiatoin을 통해서 시간 제한이 있는 임시 URLs을 제공할 수도 있다. 
+		. S3는 Audit log를 지원함으로써 누가 어떤 객체에 접근했는지와 같은 S3 리소스에 대한 완벽한 가시성을 제공해준다. 
+		. VPC에서 S3 resource와 접근하기 위한 VPC endpoint를 사용한다. 
+		. S3는 서버 사이드, 클라이언트 사이드 압호화를 제공한다. S3 Inventory 는 S3 오브젝트들에 대한 암호화 상태를 보여준다. 
+		. S3 Block pulbic Access는 보안 제어의 집합으로 S3 bucket과 객체에 대한 public 접근 제어 를 막아준다. S3 관리 콘솔에서 모든 버켓/일부 버켓에 대해서 적용할 수 있다. 
+		. Amazone Macie 는 S3의 데이터의 민감 정보를 발견하고 분류하고 보호해준다. 이것은 ML 기능을 사용해서 민감 정보를 인지하고 대쉬보드를 제공하여 시각화 해준다. 그리고 비정상 적인 접근에 대한 모니터링과 권한이 없는 접근과 의도치않은 데이터 누수에 대한 알람도 울려준다. 
+	- Query in place 
+		. S3 Select은 S3 자체의 기능으로 쿼리 성능을 400 까지 지원해주고 쿼리 비용으 80 % 감소시켜준다. 이것은 전체 오브젝트를 가져가는 것 대신 object 데이터의 서브셋을 가져가도록 지원해준다. 
+		. Amazon Athena : S3 데이터에 대해서 별도의 데이터 추출과 적재 없이 쿼리할 수 있게 해준다. 이것은 standard SQL 구문을 사용하여 데이터를 분석하고 결과를 몇초안에 보여준다. (인터렉티브)
+		. Amazon Redshift Spectrum : S3 에 대한 SQL을 직접적으로 수행시켜주는데 더 복잡하고 큰 데이터에 대한 쿼리를 수행한다. (대용량) 
+		. Athena와 Redshift 모두 common data catalog와 데이터 포맷을 공유함으로 S3 에 대해서 둘 모두 사용가능하다. 
+	- 대규모 데이터에 대한 전송 
+		. S3 Trasfer Acceleration은 멀리 떨어진 S3 버켓간 데이터 전송을 최대 속도로 하기 위해 고안되었다. 
+		. 더 큰 규모의 데이터에 대해서는 Snowball, Snowball Edge, Snowmobile을 통해서 물리적으로 이동시켜준다. 
+		. AWS Storage Gateway를 통해서 on-premise application을 유지하면서 cloud storage를 사용할 수 있다. (on-prem 환경에서 S3 사용) 
+		. AWS DataSync를 통해서 on-prem 데이터와 AWS 간의 데이터 동기화를 시켜줄 수 있다. 데이터 전송은 최대 10초 걸린다. 
+		. AWs Transfer to SFTP 는 완전 관리형 서비스로 직접 S3에 업로드/다운로드할 수 있도록 한다. 
+		
+> 스토리지 클래스 
+	- 범용적인 사용 
+		.  S3 standard : 범용 목적으로 사용 
+	- 알수 없거나 변화하는 액세스 
+		.  S3 Intelligent Tiering : 두 개의 계층에 객체를 저장하는데, 하나의 계층은 빈번한 액세스에 맞게 최적화 되며, 다른 하나는 저렴하고 빈번하지 않은 액세스 패턴에 최적화 됨. 30일 동안 접근되지 않은 객체는 cold-s3 쪽에, cold-s3 쪽에서 접근된 객체는 다시 hot-s3 계층으로 전달된다.
+	- 빈번하지 않은 액세스 
+		. S3 standard-IA : 빈번하지 않은 액세스 // 자주 액세스 되지 않지만, 필요할 때 빠르게 액세스 해야 하는 데이터. 장기 스토리지, 백업 및 DR용 데이터 스토어에 이상적.
+		. S3 one zone-IA : 빈번하지 않은 액세스 + 단일 AZ : S3 standard-IA 보다 약 20%의 비용 절감. 가용성 및 복원력이 필요 없는 경우 적합. (데이터 보조 백업 복사본 등) 
+	- 아카이브 
+		. S3 Glacier : 아카이브 // 안전하고 내구력 있으며 저렴한 스토리지. Glacier 에 직접 객체를 업로드 하거나, 수명주기 정책을 사용해 S3 스토리지 클래스와 Glacier 간 데이터를 전송할 수 있음 
+		. S3 Glacier Deep Archive : 아카이브 + 가장 저렴 // 1년에 한두번 정도 액세스 할 수 있는 데이터의 장기간 보관 및 디지털 보존을 지원. compliance 요건 충족을 위해 장기 데이터(~10년)을 보관해야 할 때 사용. 
+
+> 질문 
+	- S3란 무엇인가 
+		. 웹 인터페이스를 통해 0바이트부터 5테라까지 데이터를 object 단위로 저장할 수 있는 오브젝트 스토리지.  simple storage service로 매우 높은 지속성, 고가용성, 무한대에 가까운 데이터 확장성을 매우 낮은 가격에 제공해준다. 
+	-  S3로 무엇을 할 수 있나?
+		. 웹 인터페이스를 통해 간단히 데이터를 저장하고 가져올 수 있다. 사용한 만큼만 지불하고 매우 확장성있다. 
+	- S3를 어떻게 시작하는가? 
+		. 고유한 이름으로 버켓을 만들면된다. 
+	- S3로 on-prem 환경에서 하지 못하는 무엇을 할 수 있는가? 
+		. 추가적인 선행 투자나 성능제약 없이 거대하게 확장할 수 있다. 높은 가용성, 접근성 보안성을 낮은 가격에 제공한다. 
+	- S3에서는 어떠한 타입의 데이터를 저장하는가? 
+		. 모든 타입에 대해서 저장할 수 있다. 
+	- S3에서 얼마나 데이터를 저장할 수 있나? 
+		. 총 공간은 무한대이다. 개별 S3 object에 대한 범위는 0바이트에서 5테라까지이다. 하나의 PUT 명령으로 처리될 수 있는 객체 수는 5기가 이다. 100 메가가 넘는 객체에 대해서는 multipart upload 기능을 고려해야 한다. 
+	- S3가 제공하는 storage class는 무엇인가? (위 참고) 
+	- S3에 있는 데이터로 아마존은 무엇을 하는가? 
+		. 데이터를 저장하고 비용청구를 위해서만 사용하고 데이터 자체에 대한 접근을 하지 않는다. 법에서 요구하지 않는 이상 외부로 제공하지 않는다. 
+	- 아마존의 자체 데이터도 S3에 저장하는가? 
+		. 그러하다. 개발자들이 많은 프로젝트에서 S3를 사용한다. 
+	- S3 데이터를 어떻게 관리하는가 
+		.key 기반의 오브젝트 저장소로 데이터를 저장하면 unique한 object key를 할당해서 데이터 조회시 사용된다. 이러한 key 는 어떠한 string 값도 될 수 있으며,  그것은 계층적 구조를 모방한다. 대안으로 S3 object tagging을 통해 모든 S3 bucket 들/ prefix들에 대해서 관리할 수도 있다. 
+	- S3와 어떻게 인터페이스 할 수 있는가? 
+		. S3 는 간단하게 REST 형식으로 객체를 접근할 수 있다. 
+	- S3의 신뢰성을 어떻게 높일 수 있는가? 
+		. S3는 고가용성, 고 확장성, 빠르고 비싸지않은 데이터 스토리지 인프라로 글로벌 네트워크를 통해 제공한다. S3 standard storage class 는 99.99% 가용성을 제공하고, S3 standard IA 99.9 % one-zone IA 99.5% 보장한다. 
+	- application의 트래픽이 갑자기 증가하면 S3는 어떻게 그것을 처리하는가? 
+		. S3는 거대한 확장을 통해서 로드를 균등하게 분산할 수 있다 어떠한 application도 증가하는 트래픽에 따른 영향을 받지 않는다. (단, 비용적 제한이 걸려 있지 않을 때) 
+	- S3 는 SLA를 제공하는가? 
+		. S3 SLA를 제공한다. 
 10. Athena 
 > 개요 
 	- S3있는 데이터를 interactive 하게 SQL 표준을 사용하여 분석하기 위한 서비스. 
