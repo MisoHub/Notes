@@ -569,12 +569,19 @@ CloudFront는 AWS Shield를 통해서 DDoS, Distribute Denial of Service attack 
 		. 사용자에게 1gb 의 SPICE 가용공간을 무료로 제공해준다. 
 
 13. RDS
+> 개요 
+> 기능 
+> 질문 
 
 14. Aurora 
- 
+> 개요 
+> 기능 
+> 질문 
 
+15. Elastic Cache 
 ------------------------------------------------------------------
 서비스 확인 
 1) managed service 인가? 아닌가?
 2) serverless service 인가? 아닌가?
 3) VPC 내부 서비스인가? 아닌가?
+4) 어떻게 Availability, Reliablity를 보장하는가? 
