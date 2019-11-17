@@ -1,0 +1,41 @@
+** 문제 정의 
+- Cloud 환경에서 LAMP (Linux, Apache, MySQL, PHP) 
+- 각 컴포넌트에 대해서 HA 구성 
+- 확장성을 고려하여 구성 
+- 다양한 컴포넌트들에 대해서 DR 을 고려해야 함. 
+- 높은 throughput과 성능을 보장하는 DB와 데이터 접근 레이어를 구성 
+- 글로벌한 유저들이 접속 하더라도 낮은 지연시간으로 응답해야함 
+- http/1.1 이나 http/2 요청과 상관 없이 효과적으로 부하분산이 되어야 함 
+- 서비스 인스턴스 장애로 부터 자체적으로 인프라가 복구되어야 함 
+-  rest 나 전송에 있어서 데이터 보안이 이루어져야 함 
+- 딜리버리 팀의 확장에 따라서 환경에 대한 접근제어가 되어야 함 
+- 6개월 이상의 비활성 객체에 대한 아카이브 전략 
+- 블루프린트 아키텍쳐를 사용해서 환경을 쉽게 복제하고 관리하기 위한 기능 
+- 어플리케이션 라이프사이클 관리가 데브옵스 전략을 고려해서 생성되어야 함
+- 비용 효율적으로 모든 컴포넌트 아키텍쳐가 구성되어야 함 
+- 접근로그가 수집되고 시각화를 위해 집계되어야 함 
+
+** 서비스 확인 
+1) managed service 인가? 아닌가?
+2) serverless service 인가? 아닌가?
+3) VPC 내부 서비스인가? 아닌가?
+4) 모든 서비스에 대해서.. 어떻게 Availability, Reliablity, Security, Performance를 보장하는가? 
+5) 서비스인가 기능인가? 
+6) CloudFront 에서 dynamic content 를 어떻게 가져오는가? 
+
+
+-------------------------------------
+
+3) 서비스 범위 분류 
+- VPC 내부 
+	. EC2 - web/app server 
+	. RDS - 
+	. Elastic Cache 
+	. NAT GW 
+	. 
+- Regional Services
+	. S3 bucket 
+	. CloudFront Distribution 
+
+- VPC 외부 
+
